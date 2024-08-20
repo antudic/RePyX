@@ -1,6 +1,8 @@
 # RePyX
 Remote Python eXecutor
 
+### Warning: This allows for anyone to run any malicious code they want on your machine as long as they can connect to the server.
+
 This project allows you to monitor as well as modify your python code remotely
 any time and from any where you want without having to restart the running code.
 In your project, simply import and start the Server which will run in the 
