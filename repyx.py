@@ -1,9 +1,11 @@
 # RePyX
 # Readable Python eXecutor
 
+import inspect
 import socket
 import time
 import sys
+import os
 
 from traceback import format_exc
 from threading import Thread
@@ -37,7 +39,7 @@ class Server:
         # loop to continuously accept new incoming connections
         
         connected = False
-        retryCount = 0
+        shutup = False
 
         while not connected:
 
@@ -46,12 +48,13 @@ class Server:
                 self.socket.bind((self.ip, self.port))
                 self.socket.listen(5) # https://docs.python.org/3/library/socket.html#socket.socket.listen
 
-                print("receiver started") # redundant new line for thread friendlier printing
+                print("repyx: receiver started") # redundant new line for thread friendlier printing
                 connected = True
 
             except OSError:
-                print("Address already in use. Waiting 4 seconds.", retryCount)
-                retryCount+=1
+                if not shutup:
+                    print("repyx: Address already in use. Retrying indefinitely...", retryCount)
+                    shutup = True
                 time.sleep(4)
 
         while True:
@@ -61,7 +64,7 @@ class Server:
                 
                 client.send(b"Connected to JC")
 
-                print(f"Connection from {address} has been accepted.")
+                print(f"repyx: Connection from {address} has been accepted.")
                 self.threcver(client)
 
             except OSError:
@@ -91,13 +94,12 @@ class Server:
 
                     except Exception as e:
                         client.send(b"Encode error.")
-                        print(format_exc())
                     
             except Exception as e:
                 try: peername = client.getpeername()
                 except Exception: peername = client
 
-                print(f"Error trying to receive from {peername}. Stopping receiver.")
+                print(f"repyx: Error trying to receive from {peername}. Stopping receiver.")
                 try: self.clients.remove(client)
                 except Exception: pass
                 try: client.close()
@@ -154,7 +156,7 @@ class Client:
                     try: decoded = received.decode()
 
                     except Exception:
-                        self.server.send(b"Decode error.")
+                        self.server.send(b"repyx: Decode error.")
                         print(received)
                         continue
                     
@@ -198,3 +200,34 @@ class Client:
                 return print("Exiting JC.")
             
             self.sendCmd(cmd)
+
+
+# here we perform logic to detect if AutoStart has been explicity imported I.E 
+# "from repyx import AutoStart" as opposed to "import repyx" or "from repyx import Server"
+
+class AutoStart: pass
+# I chose to use a class here arbitrarily, any type of variable should work really
+
+stacks = inspect.stack()
+
+def _autoStart():
+    global stacks
+    time.sleep(1)
+    
+    for frame in stacks:
+        
+        if os.path.basename(__file__) in frame.filename:
+            # exclude occurrences of AutoStart in this file (stack)
+            continue
+        
+        if "AutoStart" in frame.frame.f_globals.keys():
+            if frame.frame.f_globals["AutoStart"] is AutoStart:
+                # there seems to be 2 stacks with the same globals,
+                # so in my case the code here gets run twice
+                print("repyx: Auto starting...")
+                s = Server()
+                s.start()
+                return
+
+
+Thread(target=_autoStart).start()
