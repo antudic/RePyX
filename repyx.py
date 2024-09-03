@@ -1,5 +1,5 @@
 # RePyX
-# Readable Python eXecutor
+# Remote Python eXecutor
 
 import inspect
 import socket
