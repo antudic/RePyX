@@ -53,7 +53,7 @@ class Server:
 
             except OSError:
                 if not shutup:
-                    print("repyx: Address already in use. Retrying indefinitely...", retryCount)
+                    print("repyx: Address already in use. Retrying indefinitely...")
                     shutup = True
                 time.sleep(4)
 
