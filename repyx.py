@@ -10,16 +10,21 @@ import os
 from traceback import format_exc
 from threading import Thread
 
+autoStartStack = None
+
 def runCmd(cmd: str) -> str:
+    global autoStartStack
+    
+    globs = autoStartStack.f_globals if autoStartStack else globals()
 
     if cmd.startswith("exec "):
         try:
-            return exec(cmd[5:], globals()) or ""
+            return exec(cmd[5:], globs) or ""
         except Exception:
             return format_exc()
         
     try:
-        return str(eval(cmd))
+        return str(eval(cmd, globs))
     except Exception:
         return format_exc()
 
@@ -211,7 +216,7 @@ class AutoStart: pass
 stacks = inspect.stack()
 
 def _autoStart():
-    global stacks
+    global stacks, autoStartStack
     time.sleep(1)
     
     for frame in stacks:
@@ -225,9 +230,10 @@ def _autoStart():
                 # there seems to be 2 stacks with the same globals,
                 # so in my case the code here gets run twice
                 print("repyx: Auto starting...")
+                autoStartStack = frame.frame
                 s = Server()
                 s.start()
                 return
 
-
-Thread(target=_autoStart).start()
+if __name__ != "__main__":
+    Thread(target=_autoStart).start()
