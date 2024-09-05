@@ -237,3 +237,12 @@ def _autoStart():
 
 if __name__ != "__main__":
     Thread(target=_autoStart).start()
+
+else:
+    # we try to connect to open RePyX servers
+    print("Attempting to connect to local RePyX server...")
+    c = Client()
+    c.connect()
+    print("Connected to RePyX server, starting client. (type \"exit\" to exit out of console)")
+    c.start()
+    
