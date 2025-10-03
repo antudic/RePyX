@@ -157,15 +157,18 @@ class Client:
                 received = self.server.recv(self.readLen)
 
                 if received:
+                    print()
 
-                    try: decoded = received.decode()
+                    try: 
+                        decoded = received.decode()
+                        print(decoded)
 
                     except Exception:
                         self.server.send(b"repyx: Decode error.")
                         print(received)
-                        continue
                     
-                    print(decoded)
+                    print("JC: ", end="")
+                    sys.stdout.flush()
                     
             except Exception as e:
                 try: peername = self.server.getpeername()
@@ -186,20 +189,14 @@ class Client:
         self.server.send(cmd)
 
 
-    @staticmethod
-    def _printJC():
-        def _a():
-            time.sleep(0.01)
-            print("JC: ", end="")
-            sys.stdout.flush()
-
-        Thread(target=_a, daemon=True).start()
-
-
     def start(self):
+        print("Connected to RePyX server, starting client\nType \"exit\" to exit out of console.")
+
         while True:
-            self._printJC()
-            cmd = input()
+            try: cmd = input("JC: ")
+            except KeyboardInterrupt:
+                print()
+                continue
             
             if cmd == "exit":
                 return print("Exiting JC.")
@@ -243,6 +240,5 @@ else:
     print("Attempting to connect to local RePyX server...")
     c = Client()
     c.connect()
-    print("Connected to RePyX server, starting client. (type \"exit\" to exit out of console)")
     c.start()
     
